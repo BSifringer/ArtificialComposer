@@ -1,87 +1,145 @@
-# LSTM for international airline passengers problem with memory
-import numpy
+# LSTM for Reber Grammar 
+import numpy as np
 import matplotlib.pyplot as plt
+import shelve
 from pandas import read_csv
 import math
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.models import load_model
+from keras.layers import Dense, Activation
 from keras.layers import LSTM
+from keras.optimizers import RMSprop
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
-from neupy.datasets import make_reber_classification
+from neupy.datasets import make_reber
 
 
-# convert an array of values into a dataset matrix
-def create_dataset(dataset, look_back=1):
-	dataX, dataY = [], []
-	for i in range(len(dataset)-look_back-1):
-		a = dataset[i:(i+look_back), 0]
-		dataX.append(a)
-		dataY.append(dataset[i + look_back, 0])
-	return numpy.array(dataX), numpy.array(dataY)
-# fix random seed for reproducibility
-numpy.random.seed(7)
-# load the dataset
+batch_size = 200;
+n_batch=5; #redefine this. IT is to make 1000 reber words
+
+iteration=50 #learning
 
 
-#dataframe = read_csv('international-airline-passengers.csv', usecols=[1], engine='python', skipfooter=3)
-#dataset = dataframe.values
-#dataset = dataset.astype('float32')
-
-dataset = make_reber_classification(1000,invalid.size=0)
-dataset = dataset.astype('int8')
+dataset = make_reber(batch_size*n_batch)
+dataset = 'O'.join(dataset)
 chars = sorted(list(set(dataset)))
+char_indices = dict((c, i) for i, c in enumerate(chars))
+print('DataSet concatenated lenght:', len(dataset))
 
+batches = []
+next_char = []
+step = 1
+for i in range(0, len(dataset) - batch_size, step):
+    batches.append(dataset[i: i + batch_size])
+    next_char.append(dataset[i + batch_size])
+print('nb batches of size {}:'.format(batch_size), len(batches))
+
+
+print('Vectorization...')
+X = np.zeros((len(batches), batch_size, len(chars)), dtype=np.bool)
+y = np.zeros((len(batches), len(chars)), dtype=np.bool)
+for j, batch in enumerate(batches):
+    for i, data in enumerate(batch):
+        X[j, i, char_indices[data]] = 1
+    y[j, char_indices[next_char[j]]] = 1
+
+
+#No need:
 # normalize the dataset
 ##scaler = MinMaxScaler(feature_range=(0, 1))
 ##dataset = scaler.fit_transform(dataset)
 
+#Create Test data later: 
 # split into train and test sets
-train_size = int(len(dataset) * 0.67)
-test_size = len(dataset) - train_size
-train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
+#train_size = int(len(dataset) * 0.67)
+#test_size = len(dataset) - train_size
+#train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
+
+# Already done this with batch input: 
 # reshape into X=t and Y=t+1
-look_back = 10
-trainX, trainY = create_dataset(train, look_back)
-testX, testY = create_dataset(test, look_back)
+#look_back = 10
+#trainX, trainY = create_dataset(train, look_back)
+#testX, testY = create_dataset(test, look_back)
+
+#What does this do...? Matrix form? Already done this .... the tutorial is pretty bad
 # reshape input to be [samples, time steps, features]
-trainX = numpy.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
-testX = numpy.reshape(testX, (testX.shape[0], testX.shape[1], 1))
+#trainX = numpy.reshape(trainX, (trainX.shape[0], trainX.shape[1], 1))
+#testX = numpy.reshape(testX, (testX.shape[0], testX.shape[1], 1))
+
+
 # create and fit the LSTM network
-batch_size = 1
+#batch_size = 1
+print('Building the Model layers')
 model = Sequential()
-model.add(LSTM(30, input_shape=(maxlen,len(chars))))
+model.add(LSTM(30, input_shape=(batch_size,len(chars))))
 model.add(Dense(len(chars)))
 model.add(Activation('softmax'))
-model.compile(loss='mean_squared_error', optimizer='adam')
+#model.add(Dropout(0.5))
+optimizer = RMSprop(lr=0.01)
+model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 
-for i in range(100):
-	model.fit(trainX, trainY, epochs=1, batch_size=batch_size, verbose=2, shuffle=False)
-	model.reset_states()
+print('Starting to learn:')
+for i in range(iteration):
+	print('{} out of {}'.format(i,iteration))
+	model.fit(X, y, epochs=1, batch_size=batch_size, verbose=2, shuffle=False)
+	#model.reset_states() # What's this? 
+
+
+#save the model:
+np.save('Xdata.npy',X)
+np.save('ydata.npy',y)
+
+testdataset = make_reber(batch_size*n_batch)
+testdataset = 'O'.join(testdataset)
+chars = sorted(list(set(testdataset)))
+char_indices = dict((c, i) for i, c in enumerate(chars))
+
+batches = []
+next_char = []
+step = 1
+for i in range(0, len(testdataset) - batch_size, step):
+    batches.append(testdataset[i: i + batch_size])
+    next_char.append(testdataset[i + batch_size])
+print('test data nb sequences:', len(batches))
+
+
+print('test data Vectorization...')
+Xtest = np.zeros((len(batches), batch_size, len(chars)), dtype=np.bool)
+ytest = np.zeros((len(batches), len(chars)), dtype=np.bool)
+for j, batch in enumerate(batches):
+    for i, data in enumerate(batch):
+        Xtest[j, i, char_indices[data]] = 1
+    ytest[j, char_indices[next_char[j]]] = 1
+
 # make predictions
-trainPredict = model.predict(trainX, batch_size=batch_size)
+trainPredict = model.predict(X, batch_size=batch_size)
 model.reset_states()
-testPredict = model.predict(testX, batch_size=batch_size)
+testPredict = model.predict(Xtest, batch_size=batch_size)
+
+
+#Need to change this: 
+
+
 # invert predictions
-trainPredict = scaler.inverse_transform(trainPredict)
-trainY = scaler.inverse_transform([trainY])
-testPredict = scaler.inverse_transform(testPredict)
-testY = scaler.inverse_transform([testY])
+#trainPredict = scaler.inverse_transform(trainPredict)
+#trainY = scaler.inverse_transform([y])
+#testPredict = scaler.inverse_transform(testPredict)
+#testY = scaler.inverse_transform([ytest])
 # calculate root mean squared error
-trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:,0]))
+trainScore = math.sqrt(mean_squared_error(y, trainPredict))
 print('Train Score: %.2f RMSE' % (trainScore))
-testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:,0]))
+testScore = math.sqrt(mean_squared_error(ytest, testPredict))
 print('Test Score: %.2f RMSE' % (testScore))
 # shift train predictions for plotting
-trainPredictPlot = numpy.empty_like(dataset)
-trainPredictPlot[:, :] = numpy.nan
+trainPredictPlot = np.empty_like(dataset)
+trainPredictPlot[:, :] = np.nan
 trainPredictPlot[look_back:len(trainPredict)+look_back, :] = trainPredict
 # shift test predictions for plotting
-testPredictPlot = numpy.empty_like(dataset)
-testPredictPlot[:, :] = numpy.nan
+testPredictPlot = np.empty_like(dataset)
+testPredictPlot[:, :] = np.nan
 testPredictPlot[len(trainPredict)+(look_back*2)+1:len(dataset)-1, :] = testPredict
 # plot baseline and predictions
-plt.plot(scaler.inverse_transform(dataset))
+#plt.plot(scaler.inverse_transform(dataset))
 plt.plot(trainPredictPlot)
 plt.plot(testPredictPlot)
 plt.show()
