@@ -14,8 +14,8 @@ from sklearn.metrics import mean_squared_error
 from neupy.datasets import make_reber
 
 
-batch_size = 200;
-n_batch=5; #redefine this. IT is to make 1000 reber words
+batch_size = 20;
+n_batch=50; #redefine this. IT is to make 1000 reber words
 
 iteration=50 #learning
 
@@ -72,9 +72,9 @@ for j, batch in enumerate(batches):
 print('Building the Model layers')
 model = Sequential()
 model.add(LSTM(30, input_shape=(batch_size,len(chars))))
+model.add(Dropout(0.2))
 model.add(Dense(len(chars)))
 model.add(Activation('softmax'))
-#model.add(Dropout(0.5))
 optimizer = RMSprop(lr=0.01)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 
@@ -117,29 +117,29 @@ model.reset_states()
 testPredict = model.predict(Xtest, batch_size=batch_size)
 
 
-#Need to change this: 
+##Need to change this: #
+#
 
-
-# invert predictions
-#trainPredict = scaler.inverse_transform(trainPredict)
-#trainY = scaler.inverse_transform([y])
-#testPredict = scaler.inverse_transform(testPredict)
-#testY = scaler.inverse_transform([ytest])
-# calculate root mean squared error
-trainScore = math.sqrt(mean_squared_error(y, trainPredict))
-print('Train Score: %.2f RMSE' % (trainScore))
-testScore = math.sqrt(mean_squared_error(ytest, testPredict))
-print('Test Score: %.2f RMSE' % (testScore))
-# shift train predictions for plotting
-trainPredictPlot = np.empty_like(dataset)
-trainPredictPlot[:, :] = np.nan
-trainPredictPlot[look_back:len(trainPredict)+look_back, :] = trainPredict
-# shift test predictions for plotting
-testPredictPlot = np.empty_like(dataset)
-testPredictPlot[:, :] = np.nan
-testPredictPlot[len(trainPredict)+(look_back*2)+1:len(dataset)-1, :] = testPredict
-# plot baseline and predictions
-#plt.plot(scaler.inverse_transform(dataset))
-plt.plot(trainPredictPlot)
-plt.plot(testPredictPlot)
-plt.show()
+## invert predictions
+##trainPredict = scaler.inverse_transform(trainPredict)
+##trainY = scaler.inverse_transform([y])
+##testPredict = scaler.inverse_transform(testPredict)
+##testY = scaler.inverse_transform([ytest])
+## calculate root mean squared error
+#trainScore = math.sqrt(mean_squared_error(y, trainPredict))
+#print('Train Score: %.2f RMSE' % (trainScore))
+#testScore = math.sqrt(mean_squared_error(ytest, testPredict))
+#print('Test Score: %.2f RMSE' % (testScore))
+## shift train predictions for plotting
+#trainPredictPlot = np.empty_like(dataset)
+#trainPredictPlot[:, :] = np.nan
+#trainPredictPlot[look_back:len(trainPredict)+look_back, :] = trainPredict
+## shift test predictions for plotting
+#testPredictPlot = np.empty_like(dataset)
+#testPredictPlot[:, :] = np.nan
+#testPredictPlot[len(trainPredict)+(look_back*2)+1:len(dataset)-1, :] = testPredict
+## plot baseline and predictions
+##plt.plot(scaler.inverse_transform(dataset))
+#plt.plot(trainPredictPlot)
+#plt.plot(testPredictPlot)
+#plt.show()
