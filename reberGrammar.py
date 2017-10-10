@@ -6,7 +6,7 @@ from pandas import read_csv
 import math
 from keras.models import Sequential
 from keras.models import load_model
-from keras.layers import Dense, Activation
+from keras.layers import Dense, Activation, Dropout
 from keras.layers import LSTM
 from keras.optimizers import RMSprop
 from sklearn.preprocessing import MinMaxScaler
@@ -71,7 +71,7 @@ for j, batch in enumerate(batches):
 #batch_size = 1
 print('Building the Model layers')
 model = Sequential()
-model.add(LSTM(30, input_shape=(batch_size,len(chars))))
+model.add(LSTM(80, input_shape=(batch_size,len(chars))))
 model.add(Dropout(0.2))
 model.add(Dense(len(chars)))
 model.add(Activation('softmax'))
@@ -82,39 +82,42 @@ print('Starting to learn:')
 for i in range(iteration):
 	print('{} out of {}'.format(i,iteration))
 	model.fit(X, y, epochs=1, batch_size=batch_size, verbose=2, shuffle=False)
-	#model.reset_states() # What's this? 
+	model.reset_states() # What's this? 
 
 
 #save the model:
+model.save('Cerg_model.h5')
 np.save('Xdata.npy',X)
 np.save('ydata.npy',y)
 
-testdataset = make_reber(batch_size*n_batch)
-testdataset = 'O'.join(testdataset)
-chars = sorted(list(set(testdataset)))
-char_indices = dict((c, i) for i, c in enumerate(chars))
 
-batches = []
-next_char = []
-step = 1
-for i in range(0, len(testdataset) - batch_size, step):
-    batches.append(testdataset[i: i + batch_size])
-    next_char.append(testdataset[i + batch_size])
-print('test data nb sequences:', len(batches))
+## in reber Plotter:
+#testdataset = make_reber(batch_size*n_batch)
+#testdataset = 'O'.join(testdataset)
+#chars = sorted(list(set(testdataset)))
+#char_indices = dict((c, i) for i, c in enumerate(chars))#
 
+#batches = []
+#next_char = []
+#step = 1
+#for i in range(0, len(testdataset) - batch_size, step):
+#    batches.append(testdataset[i: i + batch_size])
+#    next_char.append(testdataset[i + batch_size])
+#print('test data nb sequences:', len(batches))#
+#
 
-print('test data Vectorization...')
-Xtest = np.zeros((len(batches), batch_size, len(chars)), dtype=np.bool)
-ytest = np.zeros((len(batches), len(chars)), dtype=np.bool)
-for j, batch in enumerate(batches):
-    for i, data in enumerate(batch):
-        Xtest[j, i, char_indices[data]] = 1
-    ytest[j, char_indices[next_char[j]]] = 1
+#print('test data Vectorization...')
+#Xtest = np.zeros((len(batches), batch_size, len(chars)), dtype=np.bool)
+#ytest = np.zeros((len(batches), len(chars)), dtype=np.bool)
+#for j, batch in enumerate(batches):
+#    for i, data in enumerate(batch):
+#        Xtest[j, i, char_indices[data]] = 1
+#    ytest[j, char_indices[next_char[j]]] = 1#
 
-# make predictions
-trainPredict = model.predict(X, batch_size=batch_size)
-model.reset_states()
-testPredict = model.predict(Xtest, batch_size=batch_size)
+## make predictions
+#trainPredict = model.predict(X, batch_size=batch_size)
+#model.reset_states()
+#testPredict = model.predict(Xtest, batch_size=batch_size)
 
 
 ##Need to change this: #
