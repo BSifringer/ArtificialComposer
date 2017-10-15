@@ -60,6 +60,7 @@ model.add(Dense(len(chars)))
 model.add(Activation('softmax'))
 optimizer = RMSprop(lr=0.01)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer)
+char_indices = dict((c, i) for i, c in enumerate(chars))
 
 print('Starting to learn:')
 for i in range(iteration):
