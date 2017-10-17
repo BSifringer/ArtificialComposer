@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import shelve
 from pandas import read_csv
 import math
+import random
 from keras.models import Sequential
 from keras.models import load_model
 from keras.layers import Dense, Activation, Dropout

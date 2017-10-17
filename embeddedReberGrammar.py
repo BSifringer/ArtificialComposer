@@ -5,10 +5,11 @@ import matplotlib.pyplot as plt
 import shelve
 from pandas import read_csv
 import math
+import random
 from keras.models import Sequential
 from keras.models import load_model
 from keras.layers import Dense, Activation, Dropout
-from keras.layers import LSTM
+from keras.layers import LSTM, TimeDistributed
 from keras.optimizers import RMSprop
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
@@ -50,52 +51,64 @@ from neupy.datasets import make_reber
 #		must not forget between steps
 
 step_size = 50
-n_step=1 #redefine this. IT is to make 1000 reber words
+n_step=100 #redefine this. IT is to make 1000 reber words
 
 batch_size = 16
+n_batch = 1
 
 iteration=50 #learning
 
 
-dataset = make_reber(n_step*step_size*1000)
-dataset = ''.join(dataset)
-chars = sorted(list(set(dataset)))
+
+print('Making dataset of {} chars * {} steps, with {} times batches of {}'.\
+									format(step_size,n_step,100,batch_size))
+
+D=[]
+for i in range(n_batch*batch_size):
+	dataset=''
+	while len(dataset) < step_size*n_step+1 : 
+		embeddedStep = random.choice('TP') 
+		dataset += 'B' + embeddedStep + make_reber(1)[0] + embeddedStep + 'E'
+	D.append(dataset)
+
+#print(len(zip(*D)[0]))
+chars = sorted(list(set(D[0])))
 char_indices = dict((c, i) for i, c in enumerate(chars))
-print('DataSet concatenated lenght:', len(dataset))
 
 batches = []
 next_char = []
 
-for i in range(0, len(dataset) - step_size*n_step, step_size*n_step):
-    batches.append(dataset[i: i + step_size*n_step])
-print('nb strings of size {}:'.format(step_size*n_step), len(batches))
-
-
 print('Vectorization...')
-X = np.zeros((len(batches), step_size*n_step, len(chars)), dtype=np.bool)
-for j, batch in enumerate(batches):
-    for i, data in enumerate(batch):
-        X[j, i, char_indices[data]] = 1
+X = np.zeros((n_batch*batch_size, step_size*n_step+1, len(chars)), dtype=np.bool)
+for j, word in enumerate(D):
+    for i in range(step_size*n_step+1):
+        X[j, i, char_indices[word[i]]] = 1
 
-X=X[:len(X)-(len(X)%batch_size)]
-Y=np.roll(X,-1,axis=0)
+Y=np.roll(X,-1,axis=1)
+X = np.delete(X,-1,axis=1)
+Y = np.delete(Y,-1,axis=1)
 
 # create and fit the LSTM network
 print('Building the Model layers')
 model = Sequential()
-model.add(LSTM(80, batch_input_shape=(batch_size,step_size,len(chars)),stateful=True))
+#model.add(LSTM(80, return_sequences=True, batch_input_shape=(batch_size,n_step*step_size,len(chars)),stateful=True, unroll = True))
+model.add(LSTM(16,input_shape=(n_step*step_size,len(chars)), activation ='sigmoid',inner_activation = 'hard_sigmoid', return_sequences=True))
 model.add(Dropout(0.2))
-model.add(Dense(len(chars)))
+#model.add(TimeDistributed(Dense(len(chars))))
+model.add(TimeDistributed(Dense(10)))
+model.add(TimeDistributed(Dense(7)))
 model.add(Activation('softmax'))
 optimizer = RMSprop(lr=0.01)
-model.compile(loss='categorical_crossentropy', optimizer=optimizer)
+model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=["accuracy"])
 
 print('Starting to learn:')
-for i in range(iteration):
-	print('{} out of {}'.format(i,iteration))
-	#check parameters, shuffle True? Stateful False? 
-	model.fit(X, Y, epochs=1, batch_size=batch_size, verbose=2, shuffle=True)
-	model.reset_states() # What's this? 
+#for i in range(iteration):
+#	print('{} out of {}'.format(i,iteration))
+#	#check parameters, shuffle True? Stateful False? 
+#	model.fit(X, Y, epochs=1, batch_size=batch_size, verbose=2, shuffle=False)
+#	model.reset_states() 
+
+model.fit(X, Y, epochs=250, batch_size=batch_size, verbose=2, shuffle=False)
 
 
 #save the model:
