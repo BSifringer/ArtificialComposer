@@ -1,9 +1,9 @@
 from keras.optimizers import RMSprop
 from neupy.datasets import make_reber
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation
+from keras.layers import Dense, Dropout, Activation, TimeDistributed
 from keras.layers import LSTM
-from keras.utils import np_utils
+from keras.utils import np_utils, plot_model
 import numpy as np
 
 samples = make_reber(1000)
@@ -30,12 +30,12 @@ decoded = ''.join([indices_char[i] for i in decategorized])
 
 def batchify(X,Y,num_batches,batch_size,batch_length):
     retX = np.ndarray(shape=np.append([num_batches,batch_size,batch_length],X.shape[1:]))
-    retY = np.ndarray(shape=np.append([num_batches,batch_size],Y.shape[1:]))
+    retY = np.ndarray(shape=np.append([num_batches,batch_size,batch_length],Y.shape[1:]))
     for i in range(num_batches):
         for j in range(batch_size):
             for k in range(batch_length):
                 retX[i][j][k]=X[j+i*batch_length+k]
-            retY[i][j]=Y[j+(i+1)*batch_length-1]
+                retY[i][j][k]=Y[j+i*batch_length+k]
     return retX,retY
 
 num_batches = 300
@@ -53,49 +53,27 @@ batch_X,batch_Y = batchify(categorized,categorizedY,num_batches,batch_size,batch
 # create and fit the LSTM network
 print('Building the Model layers')
 model = Sequential()
-model.add(LSTM(80, input_shape=(batch_size,len(chars)),stateful=True,batch_size=batch_size))
+model.add(LSTM(80, return_sequences=True,input_shape=(batch_size,len(chars)),stateful=True,batch_size=batch_size))
 model.add(Dropout(0.2))
-model.add(Dense(len(chars)))
+model.add(TimeDistributed(Dense(len(chars))))
 model.add(Activation('softmax'))
 optimizer = RMSprop(lr=0.01)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 char_indices = dict((c, i) for i, c in enumerate(chars))
 
 print('Starting to learn:')
-for j in range(2):
+for j in range(5):
+    model.reset_states()
     for i in range(num_batches):
         print('{} out of {}, "epoch": {}'.format(i,num_batches,j))
-        model.fit(batch_X[i], batch_Y[i], epochs=1, batch_size=batch_size, verbose=1)
-    model.reset_states()
-
-model.evaluate(batch_X[0],batch_Y[0],batch_size)
-
-#compare:
-#a=model.predict(batch_X[1],batch_size=batch_size,verbose=1)
-#np.argmax(a,axis=1)
-#np.argmax(batch_Y[1],axis=1)
+        model.train_on_batch(batch_X[i], batch_Y[i])
+        #test on batch for evaluation
 
 
+model.save("playground_model.h5",overwrite=True)
 
-#testing area
-
-testsamples = make_reber(1000)
-
-testconcatenated_samples = 'B'+'EB'.join(samples)+'E'
-
-testX = concatenated_samples[0:(len(concatenated_samples)-1)]
-testY = concatenated_samples[1:len(concatenated_samples)]
-
-testcategorizedX = np_utils.to_categorical([char_indices[c] for c in X])
-testcategorizedY = np_utils.to_categorical([char_indices[c] for c in Y])
-
-testbatch_X,testbatch_Y = batchify(testcategorizedX,testcategorizedY,num_batches,batch_size,batch_length)
-
-correct_predictions=0;
-for i in range(num_batches):
-    a = model.predict(testbatch_X[i],batch_size)
-    correct_predictions=correct_predictions+sum(np.argmax(a,axis=1)==np.argmax(testbatch_Y[i],axis=1))
-print('number of correct predictions: {} ({}%)'.format(correct_predictions,(float(correct_predictions)/num_batches/batch_size*100)))
+np.save('playground_Xdata.npy',batch_X)
+np.save('playground_Ydata.npy',batch_Y)
 
 blubb=0 #mark breakpoint to debug ;)
 exit(0)
