@@ -16,7 +16,7 @@ from sklearn.metrics import mean_squared_error
 from neupy.datasets import make_reber
 
 
-
+# Week 3 :
 # notes: zero padds asks for a mask to neglect zeros
 # We will not padd, we will truncate. 
 # Make embedded strings size 100T, T = 50 letters
@@ -26,6 +26,18 @@ from neupy.datasets import make_reber
 # (do this before truncating is a great strategy => y won't all finish with B's)
 # Check fit models that are stateful, must forget between batches
 #		must not forget between steps
+
+
+# Week 4: 
+# Train like in BachProp5:  
+# CHECK TRAIN ON BATCH ! ! 
+# Epochs should take all data;
+# batches presented random, reset at each end of batch_size
+# 10* testData? Should training indexes before 
+# keras.utils - plot_model
+# plot loss accuracy vs epoch
+# plot imshow predict percentage on 1 word
+
 
 # LSTM for Reber Grammar 
 import numpy as np
@@ -91,24 +103,29 @@ Y = np.delete(Y,-1,axis=1)
 # create and fit the LSTM network
 print('Building the Model layers')
 model = Sequential()
-#model.add(LSTM(80, return_sequences=True, batch_input_shape=(batch_size,n_step*step_size,len(chars)),stateful=True, unroll = True))
-model.add(LSTM(16,input_shape=(n_step*step_size,len(chars)), activation ='sigmoid',inner_activation = 'hard_sigmoid', return_sequences=True))
+model.add(LSTM(80, return_sequences=True, batch_input_shape=(batch_size,step_size,len(chars)),stateful=True))
+#model.add(LSTM(80,input_shape=(n_step*step_size,len(chars)), activation ='sigmoid',inner_activation = 'hard_sigmoid', return_sequences=True))
 model.add(Dropout(0.2))
-#model.add(TimeDistributed(Dense(len(chars))))
-model.add(TimeDistributed(Dense(10)))
-model.add(TimeDistributed(Dense(7)))
+model.add(TimeDistributed(Dense(len(chars))))
+#model.add(TimeDistributed(Dense(10)))
+#model.add(TimeDistributed(Dense(7)))
 model.add(Activation('softmax'))
+#model.add(Activation('sigmoid'))
 optimizer = RMSprop(lr=0.01)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=["accuracy"])
 
 print('Starting to learn:')
-#for i in range(iteration):
-#	print('{} out of {}'.format(i,iteration))
-#	#check parameters, shuffle True? Stateful False? 
-#	model.fit(X, Y, epochs=1, batch_size=batch_size, verbose=2, shuffle=False)
-#	model.reset_states() 
+for i in range(iteration):
+	print('{} out of {}'.format(i,iteration))
+	#check parameters, shuffle True? Stateful False? 
 
-model.fit(X, Y, epochs=250, batch_size=batch_size, verbose=2, shuffle=False)
+	## CHECK TRAIN ON BATCH ! ! 
+	## Epochs should take all data; batches presented random, reset at each end of batch_size
+	for j in range(n_step):
+		model.fit(X[:,j*step_size:(j+1)*(step_size)], Y[:,j*step_size:(j+1)*step_size], epochs=1, batch_size=batch_size, verbose=2, shuffle=False)
+	model.reset_states() 
+
+#model.fit(X, Y, epochs=250, batch_size=batch_size, verbose=2, shuffle=False)
 
 
 #save the model:
