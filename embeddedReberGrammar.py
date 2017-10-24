@@ -52,8 +52,6 @@ train_idxes = np.array(range(0,(n_batch-n_test_batch)*batch_size))
 test_idxes = np.array(range((n_batch-n_test_batch)*batch_size, n_batch*batch_size))
 
 N_Epoch = 20
-iteration=50 #learning
-
 
 
 print('Making dataset of {} chars * {} steps, with {} times batches of {}'.\
@@ -146,4 +144,6 @@ for i in range(N_Epoch):
 model.save('embedCerg_model.h5')
 np.save('embedXdata.npy',X)
 np.save('embedydata.npy',Y)
+np.save('embedTrainMetrics', metrics_train)
+np.save('embedTestMetrics', metrics_test)
 
