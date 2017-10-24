@@ -28,3 +28,17 @@ imgplot = plt.imshow(P[0])
 plt.yticks(np.arange(P[0].shape[0]), list(indices_char.values()))
 plt.xticks(np.arange(P[0].shape[1]), [indices_char[np.argmax(i)] for i in xPredictBatch[0]])
 plt.show()
+
+
+x = range(train_metrics.shape[0])
+
+plt.plot(x, train_metrics[:,0]/10, 'red')
+plt.plot(x, test_metrics[:,0]/2, 'blue')
+
+plt.plot(x, train_metrics[:,1]/10, 'red')
+plt.plot(x, test_metrics[:,1]/2, 'blue')
+
+plt.legend(['Train_data', 'Test_data'])
+plt.ylabel('Loss/Accuracy')
+plt.xlabel('Number of Epochs')
+plt.show()
