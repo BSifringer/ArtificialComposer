@@ -17,6 +17,8 @@ X = np.load('embedXdata.npy')
 char_indices = {'B': 0, 'E': 1, 'P': 2, 'S': 3, 'T': 4, 'V': 5, 'X': 6}
 indices_char = dict((i, c) for i, c in enumerate(char_indices))
 
+
+
 input_shape = (model.get_layer(index=0)).input_shape
 
 xPredictBatch = X[-input_shape[0]:,:input_shape[1]]
