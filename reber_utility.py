@@ -82,4 +82,3 @@ def generate_reber_machine_discrete():
         'D1': {'B1':[0.8,'P'],'End':[0.2,'S']}
     })
     return State_machine(current_state,state_transitions)
-

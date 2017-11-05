@@ -25,7 +25,7 @@ from neupy.datasets import make_reber
 batch_size = 20;
 n_batch=50; #redefine this. IT is to make 1000 reber words
 
-iteration=50 #learning
+iteration=10 #learning
 
 
 dataset = make_reber(batch_size*n_batch)
@@ -55,7 +55,7 @@ for j, batch in enumerate(batches):
 # create and fit the LSTM network
 print('Building the Model layers')
 model = Sequential()
-model.add(LSTM(80, input_shape=(batch_size,len(chars))))
+model.add(LSTM(20, input_shape=(batch_size,len(chars))))
 model.add(Dropout(0.2))
 model.add(Dense(len(chars)))
 model.add(Activation('softmax'))
