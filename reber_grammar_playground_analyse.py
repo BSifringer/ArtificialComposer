@@ -4,6 +4,8 @@ from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, Activation, TimeDistributed
 from keras.layers import LSTM
 from keras.utils import np_utils, plot_model
+import pydot
+import graphviz
 import numpy as np
 
 samples = make_reber(1000)
@@ -37,7 +39,7 @@ batch_length=20
 
 model = load_model("playground_model.h5")
 #problem with pydot & graphviz although installed?!
-#plot_model(model,"playground_model.png")
+plot_model(model,"playground_model.png")
 
 #testing area
 

@@ -30,7 +30,10 @@ categorized = np_utils.to_categorical([char_indices[c] for c in reber_word])
 xPredictBatch[0,0:len(reber_word)] = categorized
 
 P = model.predict(xPredictBatch, batch_size = input_shape[0])
-H = model.get_layer(index=1)
+model.pop()
+model.pop()
+H = model.predict(xPredictBatch, batch_size = input_shape[0])
+
 
 P = P.transpose(0,2,1)
 
