@@ -1,7 +1,6 @@
 
 # LSTM for Embedded Continuous Reber Grammar 
 import numpy as np
-import matplotlib.pyplot as plt
 import shelve
 from pandas import read_csv, get_dummies
 import math
@@ -41,17 +40,56 @@ from keras.utils import np_utils, plot_model
 # plot imshow predict percentage on 1 word
 
 
-step_size = 50
-n_step=100 #redefine this. IT is to make 1000 reber words
+#Week 5:
+# Can change probabilities to see learning graph
 
-batch_size = 16
-n_batch = 12 # total number
+#Week 6:
+# Presentation: slide diagram with imshow
+# Notebook nice? 
+# Long reber word + Fourier transform of hidden state
+# Generation: with imshow verification
+# make lstm performance based on hidden cells : 1-20
+##def get_activations(model, model_inputs, layer_names=None):
+##    activations = []
+##    inp = model.input
+##    model_multi_inputs_cond = True
+##    if not isinstance(inp, list):
+##        # only one input! let's wrap it in a list.
+##        inp = [inp]
+##        model_multi_inputs_cond = False
+##        
+##    outputs = [layer.output for layer in model.layers if
+##               layer.name in layer_names or layer_names is None]  # all layer outputs##
+
+##    funcs = [K.function(inp + [K.learning_phase()], [out]) for out in outputs]  # evaluation functions
+##    if model_multi_inputs_cond:
+##        list_inputs = []
+##        list_inputs.extend(model_inputs)
+##        list_inputs.append(1.)
+##    else:
+##        list_inputs = [model_inputs, 1.]
+##    # Learning phase. 1 = Test mode (no dropout or batch normalization)
+##    # layer_outputs = [func([model_inputs, 1.])[0] for func in funcs]
+##    layer_outputs = [func(list_inputs)[0] for func in funcs]
+##    for layer_activations in layer_outputs:
+##        activations.append(layer_activations)
+##    return activations
+
+
+# Fourier analysis the H (output) state or M ( memory state) with model.state()
+
+
+step_size = 100
+n_step=1 #redefine this. IT is to make 1000 reber words
+
+batch_size = 10
+n_batch = 15 # total number
 n_test_batch = 2 # testing part
 
 train_idxes = np.array(range(0,(n_batch-n_test_batch)*batch_size))
 test_idxes = np.array(range((n_batch-n_test_batch)*batch_size, n_batch*batch_size))
 
-N_Epoch = 20
+N_Epoch = 80
 
 
 print('Making dataset of {} chars * {} steps, with {} times batches of {}'.\
@@ -60,9 +98,13 @@ print('Making dataset of {} chars * {} steps, with {} times batches of {}'.\
 D=[]
 for i in range(n_batch*batch_size):
 	dataset=''
-	while len(dataset) < step_size*n_step+1 - 20: 
-		embeddedStep = random.choice('TP') 
-		dataset += 'B' + embeddedStep + make_reber(1)[0] + embeddedStep + 'E'
+	while len(dataset) < step_size*n_step+1 - 0.1*step_size*n_step: 
+		embeddedStep = random.choice('TP')
+		custom = 'P'
+		if(embeddedStep == 'P'):
+			custom = 'X'
+		#dataset += 'B' + embeddedStep + 'B' + make_reber(1)[0] + custom + 'E' + embeddedStep + 'E'
+		dataset += 'B' + embeddedStep + 'B' + make_reber(1)[0] + 'E' + embeddedStep + 'E'
 	D.append(dataset)
 
 #print(len(zip(*D)[0]))
@@ -96,7 +138,7 @@ print('Building the Model layers')
 model = Sequential()
 # Careful !  to categorical uses 0 and 1, so invalid value should be smth else like -1: 
 model.add(Masking(mask_value= -1., batch_input_shape=(batch_size,step_size,len(chars))))
-model.add(LSTM(128, return_sequences=True, batch_input_shape=(batch_size,step_size,len(chars)),stateful=True))
+model.add(LSTM(20, return_sequences=True, batch_input_shape=(batch_size,step_size,len(chars)),stateful=True))
 #model.add(LSTM(80,input_shape=(n_step*step_size,len(chars)), activation ='sigmoid',inner_activation = 'hard_sigmoid', return_sequences=True))
 #model.add(LSTM(64,return_sequences=True,stateful=True))
 model.add(Dropout(0.2))
@@ -106,12 +148,12 @@ model.add(TimeDistributed(Dense(len(chars))))
 #model.add(TimeDistributed(Dense(7)))
 model.add(Activation('softmax'))
 #model.add(Activation('sigmoid'))
-optimizer = RMSprop(lr=0.01)
+optimizer = RMSprop(lr=0.005)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=["accuracy"])
 
 
-metrics_train = np.zeros((N_Epoch,len(model.metrics_names)))
-metrics_test = np.zeros((N_Epoch,len(model.metrics_names)))
+metrics_train = np.zeros((N_Epoch,len(model.metrics_names),n_batch-n_test_batch))
+metrics_test = np.zeros((N_Epoch,len(model.metrics_names),n_test_batch))
 # plot_model(model,to_file='model_test.png') # I get a unfixable bug : try later
 
 print('Starting to learn:')
@@ -124,17 +166,20 @@ for i in range(N_Epoch):
 	for j, batch  in enumerate(batches_idxes):
 		print('batch {} of {}'.format(j+1,n_batch-n_test_batch))
 		for k in range(n_step):
-			metrics_train[i] += model.train_on_batch(X[batch,k*step_size:(k+1)*(step_size)], Y[batch,k*step_size:(k+1)*step_size]) #python 0:3 gives 0,1,2 (which is not intuitive at all)
+			metrics_train[i,:,j] += model.train_on_batch(X[batch,k*step_size:(k+1)*(step_size)], Y[batch,k*step_size:(k+1)*step_size]) #python 0:3 gives 0,1,2 (which is not intuitive at all)
 		model.reset_states() 
 
 	test_batch_idxes = np.reshape(test_idxes,(-1,batch_size))
-	for test_batch in test_batch_idxes:
+	for j, test_batch in enumerate(test_batch_idxes):
 		for k in range(n_step):
-			metrics_test[i] += model.test_on_batch(X[test_batch,k*step_size:(k+1)*(step_size)], Y[test_batch,k*step_size:(k+1)*step_size])
+			metrics_test[i,:,j] += model.test_on_batch(X[test_batch,k*step_size:(k+1)*(step_size)], Y[test_batch,k*step_size:(k+1)*step_size])
 		model.reset_states() 
 
-	print('Train results:\t {} \n \t {}'.format(model.metrics_names, metrics_train[i]/(n_batch-n_test_batch) ))
-	print('Test results:\t {} \n \t {}'.format(model.metrics_names, metrics_test[i]/(n_test_batch) ))
+	metrics_test[i] = metrics_test[i]/float(n_step) # divide only i indice, else division would be done for all at each epoch
+	metrics_train[i] = metrics_train[i]/float(n_step)
+
+	print('Train results:\t {} \n \t {}'.format(model.metrics_names, np.mean(metrics_train[i],axis=1))) # mean function just for printing
+	print('Test results:\t {} \n \t {}'.format(model.metrics_names, np.mean(metrics_test[i],axis=1) ))
 
 
 #model.fit(X, Y, epochs=250, batch_size=batch_size, verbose=2, shuffle=False)
@@ -144,6 +189,6 @@ for i in range(N_Epoch):
 model.save('embedCerg_model.h5')
 np.save('embedXdata.npy',X)
 np.save('embedydata.npy',Y)
-np.save('embedTrainMetrics', metrics_train)
-np.save('embedTestMetrics', metrics_test)
+np.save('embedTrainMetrics.npy', metrics_train)
+np.save('embedTestMetrics.npy', metrics_test)
 
