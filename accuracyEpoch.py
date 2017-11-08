@@ -195,6 +195,7 @@ plt.xticks(np.arange(31))
 plt.xlabel('Hidden layer size')
 plt.ylabel('Accuracy')
 plt.title('Accuracy convergence with increasing layer size')
-matplotlib.rcParams.update({'font.size': 22})
+matplotlib.rcParams.update({'font.size': 18})
+matplotlib.rc('xtick', labelsize=12)
 plt.show()
 

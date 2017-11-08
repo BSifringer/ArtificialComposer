@@ -10,7 +10,7 @@ import matplotlib.image as mpimg
 import numpy as np
 
 #reberWord wrong but 50 length is memorized
-reber_word = 'BTBVVPTXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXVPXXXXXXXXXVPXVPXXXXXXVPXXXXXVPXVSETE'
+#reber_word = 'BTBVVPTXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXVPXXXXXXXXXVPXVPXXXXXXVPXXXXXVPXVSETE'
 #reber_word = 'BTBVVPTXXXXXXXXXXXXXXXXVPXVPXXXXXXVPXXXXXVPXVSPETE'
 #reber_word = 'BTBVVPTXXVSPETE'
 
@@ -26,8 +26,8 @@ indices_char = dict((i, c) for i, c in enumerate(char_indices))
 input_shape = (model.get_layer(index=0)).input_shape
 
 xPredictBatch = X[-input_shape[0]:,:input_shape[1]]
-categorized = np_utils.to_categorical([char_indices[c] for c in reber_word])
-xPredictBatch[0,0:len(reber_word)] = categorized
+#categorized = np_utils.to_categorical([char_indices[c] for c in reber_word])
+#xPredictBatch[0,0:len(reber_word)] = categorized
 
 P = model.predict(xPredictBatch, batch_size = input_shape[0])
 model.pop()
@@ -36,6 +36,7 @@ H = model.predict(xPredictBatch, batch_size = input_shape[0])
 
 
 P = P.transpose(0,2,1)
+H = H.transpose(0,2,1)
 
 imgplot = plt.imshow(P[0])
 plt.yticks(np.arange(P[0].shape[0]), list(indices_char.values()))
