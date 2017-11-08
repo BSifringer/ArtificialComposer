@@ -191,6 +191,10 @@ for n_layer in range(1,31):
 
 
 plt.errorbar(np.arange(31),accuracy,yerr = std_accuracy)
-plt.xticks(np.arange(32))
+plt.xticks(np.arange(31))
+plt.xlabel('Hidden layer size')
+plt.ylabel('Accuracy')
+plt.title('Accuracy convergence with increasing layer size')
+matplotlib.rcParams.update({'font.size': 22})
 plt.show()
 
