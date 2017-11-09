@@ -14,6 +14,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 from neupy.datasets import make_reber
 from keras.utils import np_utils, plot_model
+import matplotlib.pyplot as plt
 
 
 
@@ -79,8 +80,8 @@ from keras.utils import np_utils, plot_model
 # Fourier analysis the H (output) state or M ( memory state) with model.state()
 
 
-step_size = 50
-n_step=2 #redefine this. IT is to make 1000 reber words
+step_size = 100
+n_step=1 #redefine this. IT is to make 1000 reber words
 
 batch_size = 10
 n_batch = 15 # total number
@@ -133,62 +134,68 @@ Y=np.roll(X,-1,axis=1)
 X = np.delete(X,-1,axis=1)
 Y = np.delete(Y,-1,axis=1)
 
-# create and fit the LSTM network
-print('Building the Model layers')
-model = Sequential()
-# Careful !  to categorical uses 0 and 1, so invalid value should be smth else like -1: 
-model.add(Masking(mask_value= -1., batch_input_shape=(batch_size,step_size,len(chars))))
-model.add(LSTM(20, return_sequences=True, batch_input_shape=(batch_size,step_size,len(chars)),stateful=True))
-#model.add(LSTM(80,input_shape=(n_step*step_size,len(chars)), activation ='sigmoid',inner_activation = 'hard_sigmoid', return_sequences=True))
-#model.add(LSTM(64,return_sequences=True,stateful=True))
-model.add(Dropout(0.2))
+accuracy = np.zeros(31)
+std_accuracy = np.zeros(31)
 
-model.add(TimeDistributed(Dense(len(chars))))
-#model.add(TimeDistributed(Dense(10)))
-#model.add(TimeDistributed(Dense(7)))
-model.add(Activation('softmax'))
-#model.add(Activation('sigmoid'))
-optimizer = RMSprop(lr=0.005)
-model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=["accuracy"])
+for n_layer in range(1,31):
+	# create and fit the LSTM network
+	print('Building the Model layers')
+	model = Sequential()
+	# Careful !  to categorical uses 0 and 1, so invalid value should be smth else like -1: 
+	model.add(Masking(mask_value= -1., batch_input_shape=(batch_size,step_size,len(chars))))
+	model.add(LSTM(n_layer, return_sequences=True, batch_input_shape=(batch_size,step_size,len(chars)),stateful=True))
+	#model.add(LSTM(80,input_shape=(n_step*step_size,len(chars)), activation ='sigmoid',inner_activation = 'hard_sigmoid', return_sequences=True))
+	#model.add(LSTM(64,return_sequences=True,stateful=True))
+	model.add(Dropout(0.2))	
 
+	model.add(TimeDistributed(Dense(len(chars))))
+	#model.add(TimeDistributed(Dense(10)))
+	#model.add(TimeDistributed(Dense(7)))
+	model.add(Activation('softmax'))
+	#model.add(Activation('sigmoid'))
+	optimizer = RMSprop(lr=0.005)
+	model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=["accuracy"])	
+	
 
-metrics_train = np.zeros((N_Epoch,len(model.metrics_names),n_batch-n_test_batch))
-metrics_test = np.zeros((N_Epoch,len(model.metrics_names),n_test_batch))
-# plot_model(model,to_file='model_test.png') # I get a unfixable bug : try later
+	metrics_train = np.zeros((N_Epoch,len(model.metrics_names),n_batch-n_test_batch))
+	metrics_test = np.zeros((N_Epoch,len(model.metrics_names),n_test_batch))
+	# plot_model(model,to_file='model_test.png') # I get a unfixable bug : try later	
 
-print('Starting to learn:')
-for i in range(N_Epoch):
-	print('------- {} out of {} Epoch -----'.format(i+1,N_Epoch))
+	print('Starting to learn with {} layers:'.format(n_layer))
+	for i in range(N_Epoch):
+		if (i%10)==0:
+			print('------- {} out of {} Epoch -----'.format(i+1,N_Epoch))	
 
-	## Epochs should take all data; batches presented random, reset at each end of batch_size
-	np.random.shuffle(train_idxes)
-	batches_idxes = np.reshape(train_idxes, (-1,batch_size))
-	for j, batch  in enumerate(batches_idxes):
-		print('batch {} of {}'.format(j+1,n_batch-n_test_batch))
-		for k in range(n_step):
-			metrics_train[i,:,j] += model.train_on_batch(X[batch,k*step_size:(k+1)*(step_size)], Y[batch,k*step_size:(k+1)*step_size]) #python 0:3 gives 0,1,2 (which is not intuitive at all)
-		model.reset_states() 
+		## Epochs should take all data; batches presented random, reset at each end of batch_size
+		np.random.shuffle(train_idxes)
+		batches_idxes = np.reshape(train_idxes, (-1,batch_size))
+		for j, batch  in enumerate(batches_idxes):
+			for k in range(n_step):
+				metrics_train[i,:,j] += model.train_on_batch(X[batch,k*step_size:(k+1)*(step_size)], Y[batch,k*step_size:(k+1)*step_size]) #python 0:3 gives 0,1,2 (which is not intuitive at all)
+			model.reset_states() 	
 
-	test_batch_idxes = np.reshape(test_idxes,(-1,batch_size))
-	for j, test_batch in enumerate(test_batch_idxes):
-		for k in range(n_step):
-			metrics_test[i,:,j] += model.test_on_batch(X[test_batch,k*step_size:(k+1)*(step_size)], Y[test_batch,k*step_size:(k+1)*step_size])
-		model.reset_states() 
+		test_batch_idxes = np.reshape(test_idxes,(-1,batch_size))
+		for j, test_batch in enumerate(test_batch_idxes):
+			for k in range(n_step):
+				metrics_test[i,:,j] += model.test_on_batch(X[test_batch,k*step_size:(k+1)*(step_size)], Y[test_batch,k*step_size:(k+1)*step_size])
+			model.reset_states() 	
 
-	metrics_test[i] = metrics_test[i]/float(n_step) # divide only i indice, else division would be done for all at each epoch
-	metrics_train[i] = metrics_train[i]/float(n_step)
+		metrics_test[i] = metrics_test[i]/float(n_step) # divide only i indice, else division would be done for all at each epoch
+		metrics_train[i] = metrics_train[i]/float(n_step)	
 
-	print('Train results:\t {} \n \t {}'.format(model.metrics_names, np.mean(metrics_train[i],axis=1))) # mean function just for printing
-	print('Test results:\t {} \n \t {}'.format(model.metrics_names, np.mean(metrics_test[i],axis=1) ))
-
+	accuracy[n_layer] = np.mean(np.mean(metrics_train,axis = 2),axis = 0)[1]
+	std_accuracy[n_layer] = np.std(np.mean(metrics_train, axis = 2), axis = 0)[1]
+	print(' accuracy: {}  -----    std: {}'.format(accuracy[n_layer],std_accuracy[n_layer]))
 
 #model.fit(X, Y, epochs=250, batch_size=batch_size, verbose=2, shuffle=False)
 
 
-#save the model:
-model.save('embedCerg_model.h5')
-np.save('embedXdata.npy',X)
-np.save('embedydata.npy',Y)
-np.save('embedTrainMetrics.npy', metrics_train)
-np.save('embedTestMetrics.npy', metrics_test)
+plt.errorbar(np.arange(31),accuracy,yerr = std_accuracy)
+plt.xticks(np.arange(31))
+plt.xlabel('Hidden layer size')
+plt.ylabel('Accuracy')
+plt.title('Accuracy convergence with increasing layer size')
+matplotlib.rcParams.update({'font.size': 18})
+matplotlib.rc('xtick', labelsize=12)
+plt.show()
 
