@@ -82,3 +82,19 @@ def generate_reber_machine_discrete():
         'D1': {'B1':[0.8,'P'],'End':[0.2,'S']}
     })
     return State_machine(current_state,state_transitions)
+
+def generate_memory_machine():
+    current_state = 'Start'
+    state_transitions = ({
+        'Start':{'AW':[0.25,'A'],'BW':[0.25,'B'],'CW':[0.25,'C'],'DW':[0.25,'D']},
+        'AW':{'AW':[0.9,'X'],'AR':[0.1,'R']},
+        'AR':{'End':[1,'A']},
+        'BW':{'BW':[0.9,'X'],'BR':[0.1,'R']},
+        'BR':{'End':[1,'B']},
+        'CW':{'CW':[0.9,'X'],'CR':[0.1,'R']},
+        'CR':{'End':[1,'C']},
+        'DW':{'DW':[0.9,'X'],'DR':[0.1,'R']},
+        'DR':{'End':[1,'D']},
+        'End':{'Start':[1,'W']}
+    })
+    return State_machine(current_state,state_transitions)
