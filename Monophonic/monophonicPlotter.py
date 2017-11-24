@@ -11,8 +11,8 @@ import numpy as np
 
 
 model = load_model('monoPhonic_model.h5')
-train_metrics = np.load('monoTrainMetrics.npy')
-test_metrics = np.load('monoTestMetrics.npy')
+train_metrics = np.load('monoTrainMetrics2.npy')
+test_metrics = np.load('monoTestMetrics2.npy')
 
 #char_indices = {'B': 0, 'E': 1, 'P': 2, 'S': 3, 'T': 4, 'V': 5, 'X': 6}
 #indices_char = dict((i, c) for i, c in enumerate(char_indices))#
