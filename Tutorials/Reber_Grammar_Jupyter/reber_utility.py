@@ -20,8 +20,8 @@ class State_machine:
         if state_transitions is not None:
             self.state_transitions = state_transitions
         self.transitions = []
-        for i in self.state_transitions.itervalues():
-            for j in i.itervalues():
+        for i in self.state_transitions.values():
+            for j in i.values():
                 self.transitions.append(j[1])
         self.transitions = np.unique(np.asarray(self.transitions))
         # print(np.asarray([i for i in [j.values() for j in self.state_transitions.values()]]))
@@ -47,7 +47,7 @@ class State_machine:
     def make_step(self):
         rand = random.uniform(0, 1)
         lower_bound = 0
-        for (k, v) in self.state_transitions[self.current_state].iteritems():
+        for (k, v) in self.state_transitions[self.current_state].items():
             if lower_bound <= rand <= lower_bound + v[0]:
                 self.current_state = k
                 return v[1]

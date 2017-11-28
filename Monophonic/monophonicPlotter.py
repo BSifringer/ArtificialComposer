@@ -1,6 +1,6 @@
 import shelve
 from keras.optimizers import RMSprop
-from neupy.datasets import make_reber
+#from neupy.datasets import make_reber
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, Activation, TimeDistributed
 from keras.layers import LSTM
@@ -10,9 +10,9 @@ import matplotlib.image as mpimg
 import numpy as np
 
 
-model = load_model('monoPhonic_model.h5')
-train_metrics = np.load('monoTrainMetrics2.npy')
-test_metrics = np.load('monoTestMetrics2.npy')
+model = load_model('monoPhonic_model3.h5')
+train_metrics = np.load('monoTrainMetrics3.npy')
+test_metrics = np.load('monoTestMetrics3.npy')
 
 #char_indices = {'B': 0, 'E': 1, 'P': 2, 'S': 3, 'T': 4, 'V': 5, 'X': 6}
 #indices_char = dict((i, c) for i, c in enumerate(char_indices))#
@@ -49,8 +49,6 @@ std_test_metrics = np.std(test_metrics,axis=2)
 x = range(1,mean_train_metrics.shape[0]+1)
 
 
-
-plt.figure()
 f, axes = plt.subplots(2,1)
 #plt.errorbar(x, mean_test_metrics[:,0], yerr = std_test_metrics[:,0])
 axes[1].errorbar(x, mean_train_metrics[:,0],yerr = std_train_metrics[:,0], color = 'red')
