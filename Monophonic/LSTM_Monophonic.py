@@ -16,7 +16,7 @@ from keras.optimizers import RMSprop, Adam
 #from sklearn.metrics import mean_squared_error
 #from neupy.datasets import make_reber
 from keras.utils import np_utils, plot_model
-from Monophonic.utils import *
+from utils import *
 #import matplotlib.pyplot as plt
 
 
@@ -114,6 +114,7 @@ model = Sequential()
 # Careful !  to categorical uses 0 and 1, so invalid value should be smth else like -1: 
 model.add(Masking(mask_value= -1., batch_input_shape=(batch_size,step_size,len(pitch_indices)+time_dim)))
 model.add(LSTM(80, return_sequences=True, batch_input_shape=(batch_size,step_size,len(pitch_indices)+time_dim),stateful=True))
+# possibly add dropout
 model.add(LSTM(80, return_sequences = True, stateful = True))
 model.add(Dropout(0.2))
 model.add(TimeDistributed(Dense(len(pitch_indices))))
@@ -159,8 +160,8 @@ for i in range(N_Epoch):
 	test_batch_idxes = np.reshape(test_idxes,(-1,batch_size))
 	for j, test_batch in enumerate(test_batch_idxes):
 		for k in range(n_step):
-			metrics_train[i, :, j] += model.test_on_batch(X[test_batch,k*step_size:(k+1)*(step_size)], Y[test_batch,k*step_size:(k+1)*step_size])
-			write_log(callback, ['test_'+s for s in model.metrics_names], metrics_train[i, :, j], j * n_step + k)
+			metrics_test[i, :, j] += model.test_on_batch(X[test_batch,k*step_size:(k+1)*(step_size)], Y[test_batch,k*step_size:(k+1)*step_size])
+			write_log(callback, ['test_'+s for s in model.metrics_names], metrics_test[i, :, j], j * n_step + k)
 			#metrics_train[i, :, j] += logs
 		model.reset_states()
 
