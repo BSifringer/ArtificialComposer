@@ -98,7 +98,7 @@ optimizer = Adam(clipnorm=1.)# uwe tf.train.AdamOptimizer()
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=["accuracy"])
 
 # create a Tensorboard callback
-hyperparameter = 'test1'
+hyperparameter = 'test2'
 callback = TensorBoard('tensorboard_logs/'+hyperparameter)
 callback.set_model(model)
 # >tensorboard.exe --logdir=C:/Users/NiWa/PycharmProjects/ArtificialComposer/Monophonic/tensorboard_logs

@@ -3,7 +3,7 @@ import midi
 import _pickle as cPickle
 import numpy as np
 
-def writeMIDI(Tseq, pitchseq, path="", label="", tag="retrieved", resolution=192):
+def writeMIDI(Tseq, pitchseq, dtSeq = None, path="", label="", tag="retrieved", resolution=192):
 	# Instantiate a MIDI Pattern (contains a list of tracks)
 	pattern = midi.Pattern(format = 0, resolution = resolution)
 	# Instantiate a MIDI Track (contains a list of MIDI events)
@@ -13,10 +13,17 @@ def writeMIDI(Tseq, pitchseq, path="", label="", tag="retrieved", resolution=192
 	tick = 0
 	Events = []
 
-	for T, p in zip(Tseq, pitchseq):
-		tick = tick + int(T*resolution)
-		Events.append({'t': tick, 'p': p, 'm': 'ON'})
-		Events.append({'t': tick+int(T*resolution), 'p': p, 'm': 'OFF'})
+	# if dtSeq is None assume file is monophonic
+	if dtSeq is None:
+		for T, p in zip(Tseq, pitchseq):
+			tick = tick + int(T*resolution)
+			Events.append({'t': tick, 'p': p, 'm': 'ON'})
+			Events.append({'t': tick+int(T*resolution), 'p': p, 'm': 'OFF'})
+	else:
+		for T, p, dt in zip(Tseq, pitchseq, dtSeq):
+			tick = tick + int(T * resolution)
+			Events.append({'t': tick, 'p': p, 'm': 'ON'})
+			Events.append({'t': tick + int(dt * resolution), 'p': p, 'm': 'OFF'})
 
 	Events = sorted(Events, key=lambda k: k['t'])
 	tick = 0
