@@ -9,13 +9,13 @@ import MusicUtility.Song as Song
 
 # Do we predict a single batch or a full song?
 # !! Input shape has shape of batch
-# For rythm, take a random song? 
+# For rhythm, take a random song?
 # Generate until random song is empty ? => Multiple batches? 
 # Idea: never reset states, use predict on single note and rythm and save in vector => no need to work with changing batches
 
 plotting = False
-write_midi = False
-print_stats = True
+write_midi = True
+print_stats = False
 
 print('Loading model')
 model = load_model('monoPhonic_model2.h5')
@@ -86,7 +86,7 @@ if plotting:
 # The output here should also be the first random note + predictions
 prediction = np.array(prediction, dtype=int)
 if write_midi:
-    writeMIDI(random_rhythm, prediction, label="test1")
+    writeMIDI(random_rhythm, prediction,path="C:/Users/NiWa/Desktop/", label="test1")
 
 # do some statistics
 
