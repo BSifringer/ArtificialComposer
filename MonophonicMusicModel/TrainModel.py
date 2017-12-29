@@ -4,7 +4,8 @@ from keras.models import load_model
 from keras.callbacks import TensorBoard
 from MonophonicMusicModel.Specifications import *
 
-model = load_model('models\\'+model_name+'.h5')
+# model = load_model('models\\'+model_name+'.h5')
+model = load_model('models\\'+model_name+'_epoch_19.h5')
 
 
 def generate_input(song_indices, note_indices, pitch_shifts=np.zeros(batch_size)):
@@ -61,7 +62,8 @@ n_train_batches = int(len(train_indices)/batch_size)
 test_indices = np.arange(int(train_percentage*len(songs)), len(songs))
 n_test_batches = int(len(test_indices)/batch_size)
 
-for e in range(n_epoch):
+# for e in range(n_epoch):
+for e in range(20, 25):
     print('Epoch {} / {}'.format(e, n_epoch))
     np.random.shuffle(train_indices)
     for i in range(n_train_batches):
