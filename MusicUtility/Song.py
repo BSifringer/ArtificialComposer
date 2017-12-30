@@ -4,3 +4,4 @@ class Song:
         self.t = t
         self.pitch = pitch
         self.dt = dt
+        self.size = len(pitch)

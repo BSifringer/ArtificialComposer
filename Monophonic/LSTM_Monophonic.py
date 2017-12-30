@@ -14,7 +14,7 @@ from keras.layers import LSTM, TimeDistributed, Masking
 from keras.optimizers import RMSprop, Adam
 
 from keras.utils import np_utils, plot_model
-from utils import *
+from Monophonic.utils import *
 #import matplotlib.pyplot as plt
 
 
@@ -110,10 +110,10 @@ if add_time:
 print('Building the Model layers')
 model = Sequential()
 # Careful !  to categorical uses 0 and 1, so invalid value should be smth else like -1: 
-model.add(Masking(mask_value= -1., batch_input_shape=(batch_size,step_size,len(pitch_indices)+time_dim)))
+model.add(Masking(mask_value=-1., batch_input_shape=(batch_size,step_size,len(pitch_indices)+time_dim)))
 model.add(LSTM(80, return_sequences=True, batch_input_shape=(batch_size,step_size,len(pitch_indices)+time_dim),stateful=True))
 # possibly add dropout
-model.add(LSTM(80, return_sequences = True, stateful = True))
+model.add(LSTM(80, return_sequences=True, stateful=True))
 model.add(Dropout(0.2))
 model.add(TimeDistributed(Dense(len(pitch_indices))))
 model.add(Activation('softmax'))
@@ -170,8 +170,7 @@ for i in range(N_Epoch):
 	print('Test results:\t {} \n \t {}'.format(model.metrics_names, np.mean(metrics_test[i],axis=1) ))
 
 
-
-#save the model:
+# save the model:
 model.save('monoPhonic_model3.h5')
 #np.save('monoXdata.npy',X) #too big ?!
 #np.save('monoYdata.npy',Y)

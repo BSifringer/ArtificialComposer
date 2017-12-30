@@ -7,7 +7,7 @@ def store_midi(song, path="", label="", tag="retrieved", resolution=192):
     """ store song in midi file"""
 
     # Instantiate a MIDI Pattern (contains a list of tracks)
-    pattern = midi.Pattern(format = 0, resolution = resolution)
+    pattern = midi.Pattern(format=0, resolution=resolution)
     # Instantiate a MIDI Track (contains a list of MIDI events)
     track = midi.Track()
     # Append the track to the pattern
@@ -19,14 +19,14 @@ def store_midi(song, path="", label="", tag="retrieved", resolution=192):
 
     if song.dt is None:
         for T, p in zip(song.t, song.pitch):
-            tick = tick + int(T*resolution)
             events.append({'t': tick, 'p': p, 'm': 'ON'})
-            events.append({'t': tick+int(T*resolution), 'p': p, 'm': 'OFF'})
+            tick = tick + int(T*resolution)
+            events.append({'t': tick, 'p': p, 'm': 'OFF'})
     else:
         for T, p, dt in zip(song.dt, song.pitch, song.dt):
-            tick = tick + int(T * resolution)
             events.append({'t': tick, 'p': p, 'm': 'ON'})
-            events.append({'t': tick + int(dt * resolution), 'p': p, 'm': 'OFF'})
+            tick = tick + int(dt*resolution)
+            events.append({'t': tick, 'p': p, 'm': 'OFF'})
 
     events = sorted(events, key=lambda k: k['t'])
     tick = 0
