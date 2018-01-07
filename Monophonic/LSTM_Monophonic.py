@@ -12,9 +12,7 @@ from keras.models import load_model
 from keras.layers import Dense, Activation, Dropout
 from keras.layers import LSTM, TimeDistributed, Masking
 from keras.optimizers import RMSprop, Adam
-#from sklearn.preprocessing import MinMaxScaler
-#from sklearn.metrics import mean_squared_error
-#from neupy.datasets import make_reber
+
 from keras.utils import np_utils, plot_model
 from Monophonic.utils import *
 #import matplotlib.pyplot as plt

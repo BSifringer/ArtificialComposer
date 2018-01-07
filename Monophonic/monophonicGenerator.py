@@ -2,11 +2,20 @@ from keras.models import load_model
 from keras.utils import np_utils
 import matplotlib.pyplot as plot
 import random
-from Monophonic.utils import *
+from utils import *
 # -> for Brian: change this back to utils ;)
-import MusicUtility.Statistics as Stat
-import MusicUtility.Song as Song
+#from  ..MusicUtility import Statistics
+#from ..MusicUtility import Song
 
+if __name__ == "__main__" and __package__ is None:
+    from sys import path
+    from os.path import dirname as dir
+    
+    path.append(dir(path[0]))
+    __package__ = "monoPhonic"
+
+#import MusicUtility.Statistics as Stat
+#import MusicUtility.Song as Song
 # Do we predict a single batch or a full song?
 # !! Input shape has shape of batch
 # For rhythm, take a random song?
@@ -15,12 +24,15 @@ import MusicUtility.Song as Song
 
 plotting = False
 write_midi = True
+#print_stats = True
 print_stats = False
 
+
 print('Loading model')
-model = load_model('monoPhonic_model2.h5')
+#model = load_model('monoPhonic_model2.h5')
 if 'model' not in vars():
-    model = load_model('monoPhonic_model2.h5')
+#   model = load_model('monoPhonic_model2.h5')
+    model = load_model('forward_model_single.h5')
 else:
     model.reset_states()
 
@@ -60,6 +72,8 @@ for i in range(predict_size):
     if added_time:
         xPredictBatch[0, 0, -time_dim:] = np_utils.to_categorical(time_indices[random_rhythm[i]], num_classes=time_dim)
     P = model.predict(xPredictBatch, batch_size=input_shape[0])
+    if len(P) == 2:
+        P = P[0]
     # choice = np.argmax(P[0,i]) #Temporary probability
     # choice = np.argmax(P[0,0]) #Temporary probability
     choice = np.random.choice(range(len(pitch_indices)), p=P[0, 0])  # take out index value (Range) from P probabilities
@@ -86,30 +100,32 @@ if plotting:
 # The output here should also be the first random note + predictions
 prediction = np.array(prediction, dtype=int)
 if write_midi:
-    writeMIDI(random_rhythm, prediction,path="C:/Users/NiWa/Desktop/", label="test1")
+
+    writeMIDI(random_rhythm, prediction, label="test_forward_single")
+    #writeMIDI(random_rhythm, prediction,path="C:/Users/NiWa/Desktop/", label="test1")
 
 # do some statistics
 
-if print_stats:
-    song = Song.Song(random_rhythm, prediction, random_rhythm)
-
-    plot.figure(1)
-    pitch_histogram = Stat.pitch_histogram([song], Stat.pitches)
-    plot.plot(pitch_histogram.keys(), pitch_histogram.values())
-    plot.xlabel("key")
-    plot.ylabel("frequency")
-    plot.draw()
-
-    plot.figure(2)
-    following_pitches_histogram = Stat.following_pitches_histogram([song], Stat.pitches)
-    plot.imshow([[following_pitches_histogram[(i, j)] for i in Stat.pitches] for j in Stat.pitches], origin='lower')
-    plot.xlabel("key 1")
-    plot.ylabel("key 2")
-    plot.draw()
-
-    plot.figure(3)
-    interval_histogram = Stat.interval_histogram([song], Stat.pitches)
-    plot.plot(interval_histogram.keys(), interval_histogram.values())
-    plot.xlabel("interval")
-    plot.ylabel("frequency")
-    plot.show()
+#if print_stats:
+#    song = Song.Song(random_rhythm, prediction, random_rhythm)
+#
+#    plot.figure(1)
+#    pitch_histogram = Stat.pitch_histogram([song], Stat.pitches)
+#    plot.plot(pitch_histogram.keys(), pitch_histogram.values())
+#    plot.xlabel("key")
+#    plot.ylabel("frequency")
+#    plot.draw()
+#
+#    plot.figure(2)
+#    following_pitches_histogram = Stat.following_pitches_histogram([song], Stat.pitches)
+#    plot.imshow([[following_pitches_histogram[(i, j)] for i in Stat.pitches] for j in Stat.pitches], origin='lower')
+#    plot.xlabel("key 1")
+#    plot.ylabel("key 2")
+#    plot.draw()
+#
+#    plot.figure(3)
+#    interval_histogram = Stat.interval_histogram([song], Stat.pitches)
+#    plot.plot(interval_histogram.keys(), interval_histogram.values())
+#    plot.xlabel("interval")
+#    plot.ylabel("frequency")
+#    plot.show()
