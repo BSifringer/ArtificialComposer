@@ -5,7 +5,7 @@ from keras.callbacks import TensorBoard
 from MonophonicMusicModel.Specifications import *
 
 # model = load_model('models\\'+model_name+'.h5')
-model = load_model('models\\'+model_name+'_epoch_19.h5')
+model = load_model('models\\'+model_name+'_epoch_29.h5')
 
 
 def generate_input(song_indices, note_indices, pitch_shifts=np.zeros(batch_size)):
@@ -28,7 +28,7 @@ def generate_output(song_indices, note_indices, pitch_shifts=np.zeros(batch_size
         the size of last input dimension is increased by 1 in order to have an ending
         use this method only directly before feeding data into the training-procedure in order to save storage """
     duration_output = np.zeros([len(song_indices), step_size, n_durations])
-    pitch_output = np.zeros([len(song_indices), step_size, n_pitches])
+    pitch_output = np.zeros([len(song_indices), step_size, n_pitches + 1])
 
     for i in range(len(song_indices)):
         for j in [tmp for tmp in range(len(note_indices)) if note_indices[tmp]+1 < len(songs[song_indices[i]].pitch)]:
@@ -36,6 +36,9 @@ def generate_output(song_indices, note_indices, pitch_shifts=np.zeros(batch_size
                 pitch_output[i, j, pitch2index[songs[song_indices[i]].pitch[note_indices[j]+1]+pitch_shifts[i]]] = 1
             if songs[song_indices[i]].t[note_indices[j]+1] in durations:
                 duration_output[i, j, duration2index[songs[song_indices[i]].t[note_indices[j]+1]]] = 1
+        if len(songs[song_indices[i]].pitch)-1 in note_indices:
+            j = np.where(note_indices == len(songs[song_indices[i]].pitch)-1)
+            pitch_output[i, j, n_pitches] = 1
     return [duration_output, pitch_output]
 
 
@@ -63,8 +66,9 @@ test_indices = np.arange(int(train_percentage*len(songs)), len(songs))
 n_test_batches = int(len(test_indices)/batch_size)
 
 # for e in range(n_epoch):
-for e in range(20, 25):
+for e in range(30, 35):
     print('Epoch {} / {}'.format(e, n_epoch))
+
     np.random.shuffle(train_indices)
     for i in range(n_train_batches):
         print('Train Batch {} / {}'.format(i, n_train_batches))
