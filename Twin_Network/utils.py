@@ -1,6 +1,7 @@
 import midi
 # install from git: pip install git+https://github.com/vishnubob/python-midi@feature/python3
 import _pickle as cPickle
+#change _pickle if using python 2
 import numpy as np
 
 def writeMIDI(Tseq, pitchseq, dtSeq = None, path="", label="", tag="retrieved", resolution=192):

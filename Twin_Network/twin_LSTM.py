@@ -112,19 +112,7 @@ def train_forwards(back_model, X, Y,  n_batch, n_test_batch, extension = '_', n_
 	model.compile(optimizer = optimizer, metrics = ["accuracy"],
 		loss = {'main_output': 'categorical_crossentropy', 'lstm_2_out': 'mean_squared_error'},
 		loss_weights={'main_output': 1., 'lstm_2_out': 0.5})
-
-#	model = Sequential()
-#	# Careful !  to categorical uses 0 and 1, so invalid value should be smth else like -1: 
-#	model.add(Masking(mask_value= -1., batch_input_shape=(batch_size,step_size,len(pitch_indices)+time_dim)))
-#	model.add(LSTM(80, return_sequences=True, batch_input_shape=(batch_size,step_size,len(pitch_indices)+time_dim),stateful=True))
-#	# possibly add dropout
-#	model.add(LSTM(80, return_sequences = True, stateful = True))
-#	model.add(Dropout(0.2))
-#	model.add(TimeDistributed(Dense(len(pitch_indices))))
-#	model.add(Activation('softmax'))
-#	optimizer = Adam(clipnorm=1.)# uwe tf.train.AdamOptimizer()
-#	model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=["accuracy"])
-
+        
 	# create a Tensorboard callback
 	#hyperparameter = 'forward_single'
 	#callback = TensorBoard('tensorboard_logs/'+hyperparameter)
